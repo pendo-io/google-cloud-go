@@ -23,9 +23,7 @@ import (
 	gax "github.com/googleapis/gax-go/v2"
 	pb "google.golang.org/genproto/googleapis/datastore/v1"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 )
 
 // datastoreClient is a wrapper for the pb.DatastoreClient that includes gRPC
@@ -105,7 +103,8 @@ func (dc *datastoreClient) invoke(ctx context.Context, f func(ctx context.Contex
 }
 
 func shouldRetry(err error) bool {
-	if err == nil {
+	return false
+	/*if err == nil {
 		return false
 	}
 	s, ok := status.FromError(err)
@@ -113,5 +112,5 @@ func shouldRetry(err error) bool {
 		return false
 	}
 	// See https://cloud.google.com/datastore/docs/concepts/errors.
-	return s.Code() == codes.Unavailable || s.Code() == codes.DeadlineExceeded
+	return s.Code() == codes.Unavailable || s.Code() == codes.DeadlineExceeded*/
 }
