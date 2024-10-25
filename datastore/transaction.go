@@ -17,6 +17,7 @@ package datastore
 import (
 	"context"
 	"errors"
+	"log"
 	"sync"
 	"time"
 
@@ -412,13 +413,16 @@ func (c *Client) RunInTransaction(ctx context.Context, f func(tx *Transaction) e
 
 		// Check if error should be retried
 		code, errConvert := grpcStatusCode(retryErr)
+		log.Printf("RunInTransaction: parsing retryErr %v, code %v, errConvert %v", retryErr, code, errConvert)
 		if errConvert != nil && code == codes.ResourceExhausted {
 			// ResourceExhausted error should be retried with max backoff
+			log.Print("RunInTransaction: the big sleep...")
 			if sleepErr := gaxSleep(ctx, txnBackoff.Max); sleepErr != nil {
 				return nil, err
 			}
 		} else {
 			// Check whether error other than ResourceExhausted should be retried
+			log.Print("RunInTransaction: the little sleep...")
 			backoffErr := backoffBeforeRetry(ctx, txnRetryer, retryErr)
 			if backoffErr != nil {
 				return nil, err
