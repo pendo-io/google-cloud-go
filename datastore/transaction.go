@@ -292,9 +292,11 @@ func backoffBeforeRetry(ctx context.Context, retryer gax.Retryer, err error) err
 	if !shouldRetry {
 		return err
 	}
+	n := time.Now()
 	if sleepErr := gaxSleep(ctx, delay); sleepErr != nil {
 		return sleepErr
 	}
+	log.Printf("backoffBeforeRetry: delay %s, actual %s", delay, time.Since(n))
 	return nil
 }
 
