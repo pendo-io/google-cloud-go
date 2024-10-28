@@ -292,11 +292,10 @@ func backoffBeforeRetry(ctx context.Context, retryer gax.Retryer, err error) err
 	if !shouldRetry {
 		return err
 	}
-	n := time.Now()
+	log.Printf("backoffBeforeRetry: retryer %0p napping for %s", retryer, delay)
 	if sleepErr := gaxSleep(ctx, delay); sleepErr != nil {
 		return sleepErr
 	}
-	log.Printf("backoffBeforeRetry: delay %s, actual %s", delay, time.Since(n))
 	return nil
 }
 
@@ -415,16 +414,15 @@ func (c *Client) RunInTransaction(ctx context.Context, f func(tx *Transaction) e
 
 		// Check if error should be retried
 		code, errConvert := grpcStatusCode(retryErr)
-		log.Printf("RunInTransaction: parsing retryErr %v, code %v, errConvert %v", retryErr, code, errConvert)
+		log.Printf("RunInTransaction (%0p): parsing retryErr %v, code %v, errConvert %v", tx, retryErr, code, errConvert)
 		if errConvert != nil && code == codes.ResourceExhausted {
 			// ResourceExhausted error should be retried with max backoff
-			log.Print("RunInTransaction: the big sleep...")
 			if sleepErr := gaxSleep(ctx, txnBackoff.Max); sleepErr != nil {
 				return nil, err
 			}
 		} else {
 			// Check whether error other than ResourceExhausted should be retried
-			log.Print("RunInTransaction: the little sleep...")
+			log.Printf("RunInTransaction: (%0p) sleeping before trying again, attempt %d", tx, n+1)
 			backoffErr := backoffBeforeRetry(ctx, txnRetryer, retryErr)
 			if backoffErr != nil {
 				return nil, err
